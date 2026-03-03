@@ -4,6 +4,28 @@ Screen reader accessibility plugin for Claude Code.
 
 claude-sonar intercepts Claude Code's tool output via the hooks system, reformats it into screen-reader-friendly summaries, and optionally speaks them aloud. It turns walls of raw JSON into concise, navigable announcements — so blind and low-vision developers can follow what Claude is doing without reading every line.
 
+## Project Status
+
+This project was built as a seed for the community — a solid foundation that someone can fork and make their own. The architecture is clean, the test suite is thorough (545 tests across 42 files), and the docs are comprehensive. There may be bugs in edge cases, but the scaffolding is there.
+
+I'm not planning to actively maintain this long-term, but I'll try to respond to bug reports. My hope is that screen reader users who live with these problems daily will take this and shape it into exactly what they need.
+
+If this project is useful to you, or if you want to see the community pick it up, a star helps others find it.
+
+## Working on claude-sonar
+
+This project is designed to be worked on with AI-assisted development. The intended workflow is to use Claude Code (or any AI coding agent) to contribute — which means working on an accessibility tool using the very tool it makes accessible.
+
+The repo includes a [CLAUDE.md](CLAUDE.md) that gives Claude Code full context on the architecture, safety rules, accessibility requirements, and how to add formatters and hook events. It's written with blind and low-vision developers in mind, so it works whether you're reading it yourself or having Claude Code read it for you.
+
+```bash
+# Clone and start working with Claude Code immediately
+git clone https://github.com/vylasaven/claude-sonar.git
+cd claude-sonar
+npm install
+claude  # Claude Code picks up CLAUDE.md automatically
+```
+
 ## What It Does
 
 Claude Code tools produce verbose JSON. claude-sonar replaces that with structured, spoken-friendly output.
@@ -364,6 +386,8 @@ claude-sonar setup          # Re-register hooks
 See [CONTRIBUTING.md](CONTRIBUTING.md) for development setup, architecture overview, and how to add formatters, hook events, and earcons.
 
 See [TESTING.md](TESTING.md) for a step-by-step guide to testing with screen readers (VoiceOver, NVDA, Orca).
+
+See [CLAUDE.md](CLAUDE.md) for AI agent instructions — if you're using Claude Code to work on this project, it picks this up automatically.
 
 ## License
 
