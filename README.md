@@ -28,47 +28,62 @@ claude  # Claude Code picks up CLAUDE.md automatically
 
 ## What It Does
 
-Claude Code tools produce verbose JSON. claude-sonar replaces that with structured, spoken-friendly output.
+Here's what happens during a real Claude Code session exploring a codebase. You ask Claude to look at the project and run the tests. Claude uses 13 tools. Without sonar, your screen reader tries to read every tool response — raw JSON, 53 file paths, 681 lines of source code, git logs. With sonar, you hear one sentence.
 
-**Before (raw hook output):**
+### Glob: find all TypeScript files
 
-```
-{"tool_name":"Read","tool_input":{"file_path":"/src/app.ts"},"tool_response":{"content":"import express from 'express';\nexport interface Config { port: number; host: string; }\nexport function createApp(config: Config) { ... }\n// 200 lines of code"}}
-```
-
-**After (claude-sonar):**
-
-What Claude sees: `Read /src/app.ts (200 lines). Contains: interface Config, function createApp(config: Config)`
-
-What you hear: *"Read app.ts, 200 lines. Contains Config, createApp."*
-
----
-
-**Before (Edit):**
+**Without sonar**, your screen reader reads the full JSON response containing all 53 file paths:
 
 ```
-{"tool_name":"Edit","tool_input":{"file_path":"/src/auth.ts","old_string":"function login()...","new_string":"async function login(user: User)..."},"tool_response":{}}
+{"tool_name":"Glob","tool_input":{"pattern":"src/**/*.ts"},
+"tool_response":["src/cli/index.ts","src/config/defaults.ts",
+"src/config/types.ts","src/core/apply-significance.ts",
+"src/core/code-summarizer.ts","src/core/digest.ts",
+...53 file paths...]}
 ```
 
-**After:**
+**With sonar**: silence. Significance: noise. Claude gets a summary; you hear nothing.
 
-What Claude sees: `Edited /src/auth.ts. Changed: function login → async function login(user: User)`
+### Read: open the main pipeline file
 
-What you hear: *"Edited auth.ts. Changed login."*
+**Without sonar**, your screen reader reads all 681 lines of pipeline.ts as raw JSON — escaped newlines, string concatenation, the works.
 
----
+**With sonar**: silence. Significance: noise. A file read is routine bookkeeping for Claude, not something you need announced.
 
-**Before (Bash):**
+### Grep: search for a function name
 
-```
-{"tool_name":"Bash","tool_input":{"command":"npm test"},"tool_response":{"stdout":"Tests: 47 passed, 2 failed\nTime: 3.2s","exit_code":1}}
-```
+**Without sonar**, your screen reader reads every matching line, file path, and line number from the JSON response.
 
-**After:**
+**With sonar**: silence. Significance: noise. Search results are for Claude to process, not for you to hear.
 
-What Claude sees: `Bash: npm test — exit 1. 47 passed, 2 failed (3.2s)`
+### Bash: check git history
 
-What you hear: *"npm test failed. 47 passed, 2 failed."* (+ test-fail earcon sound)
+**Without sonar**, your screen reader reads the entire git log output embedded in JSON.
+
+**With sonar**: silence. Significance: noise. Read-only commands that just gather information are silenced.
+
+### Bash: run the test suite
+
+**Without sonar**, your screen reader reads the full test runner output — every file, every assertion, raw stdout in JSON.
+
+**With sonar**, you hear: *"npm test passed. 545 passed."* A chime plays (test-pass earcon). Significance: routine — but test results are something you actually care about.
+
+### Bash: list the build output
+
+**Without sonar**, your screen reader reads the full `ls -la` output as JSON.
+
+**With sonar**: silence. Significance: noise. Another read-only command silenced.
+
+### The result
+
+13 tool uses. 1 spoken aloud. The rest were silently summarized for Claude and kept out of your ears.
+
+That's what sonar does. It classifies every tool event by significance — noise, routine, notable, or important — and only speaks what matters:
+
+- **Noise**: file reads, searches, read-only commands. Silenced entirely.
+- **Routine**: test runs, builds. Spoken as a short sentence.
+- **Notable**: file edits, structural changes. Spoken with detail. Earcon chime.
+- **Important**: errors, failures, permission requests. Always spoken. Earcon alert.
 
 ---
 
