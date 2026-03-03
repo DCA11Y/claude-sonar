@@ -3,7 +3,7 @@
 ## Development Setup
 
 ```bash
-git clone https://github.com/your-username/claude-sonar.git
+git clone https://github.com/vylasaven/claude-sonar.git
 cd claude-sonar
 npm install
 npm run build
