@@ -46,11 +46,12 @@ describe("playEarcon", () => {
   });
 
   it("plays macOS system sound on darwin", () => {
-    // Force macOS engine
+    // afplay does not support a `--` end-of-options separator; passing it
+    // makes afplay exit with `unknown argument: --` and produce no audio.
     playEarcon("done", earconConfig({ engine: "afplay" }));
     expect(spawn).toHaveBeenCalledWith(
       "afplay",
-      ["-v", "0.5", "--", "/System/Library/Sounds/Hero.aiff"],
+      ["-v", "0.5", "/System/Library/Sounds/Hero.aiff"],
       expect.objectContaining({ detached: true, stdio: "ignore" }),
     );
   });
@@ -74,7 +75,7 @@ describe("playEarcon", () => {
     );
     expect(spawn).toHaveBeenCalledWith(
       "afplay",
-      ["-v", "0.5", "--", "/custom/chime.wav"],
+      ["-v", "0.5", "/custom/chime.wav"],
       expect.objectContaining({ detached: true }),
     );
   });
@@ -83,7 +84,7 @@ describe("playEarcon", () => {
     playEarcon("error", earconConfig({ engine: "afplay", volume: 0.8 }));
     expect(spawn).toHaveBeenCalledWith(
       "afplay",
-      ["-v", "0.8", "--", "/System/Library/Sounds/Sosumi.aiff"],
+      ["-v", "0.8", "/System/Library/Sounds/Sosumi.aiff"],
       expect.any(Object),
     );
   });
