@@ -301,6 +301,14 @@ function handleStop(event: StopEvent, config: SonarConfig): FormatResult {
   return { hookOutput, ttsText: formatted.ttsText, earcon: "done" };
 }
 
+function humanizeAgentLabel(text: string): string {
+  return text
+    .replace(/[-_]/g, " ")
+    .replace(/\s+/g, " ")
+    .trim()
+    .replace(/^\w/, (c) => c.toUpperCase());
+}
+
 /**
  * Handle SubagentStart events — a subagent has started.
  */
@@ -308,9 +316,18 @@ function handleSubagentStart(event: SubagentStartEvent, config: SonarConfig): Fo
   const agentType = event.subagent_type || "unknown";
   const desc = event.description ? `: ${event.description}` : "";
 
+  let ttsText: string;
+  if (event.subagent_type) {
+    ttsText = `Starting ${humanizeAgentLabel(event.subagent_type)} agent.`;
+  } else if (event.description) {
+    ttsText = `Starting agent: ${humanizeAgentLabel(event.description.slice(0, 60))}.`;
+  } else {
+    ttsText = "Starting agent.";
+  }
+
   const formatted: FormattedOutput = {
     contextText: `Starting ${agentType} agent${desc}.`,
-    ttsText: `Starting ${agentType} agent.`,
+    ttsText,
   };
 
   const hookOutput = buildHookOutput({
@@ -327,10 +344,11 @@ function handleSubagentStart(event: SubagentStartEvent, config: SonarConfig): Fo
  */
 function handleSubagentStop(event: SubagentStopEvent, config: SonarConfig): FormatResult {
   const agentType = event.subagent_type || "unknown";
+  const ttsLabel = event.subagent_type ? humanizeAgentLabel(event.subagent_type) : null;
 
   const formatted: FormattedOutput = {
     contextText: `${agentType} agent done.`,
-    ttsText: `${agentType} agent done.`,
+    ttsText: ttsLabel ? `${ttsLabel} agent done.` : "Agent done.",
   };
 
   const hookOutput = buildHookOutput({

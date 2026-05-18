@@ -37,15 +37,21 @@ describe("SubagentStart event handling", () => {
       description: "investigating error",
     });
     const result = processHookEvent(input, config());
-    expect(result.ttsText).toBe("Starting debugger agent.");
+    expect(result.ttsText).toBe("Starting Debugger agent.");
     expect(getContext(result)).toContain("debugger");
     expect(getContext(result)).toContain("investigating error");
   });
 
-  it("handles missing subagent_type", () => {
+  it("handles missing subagent_type with no description", () => {
     const input = JSON.stringify({ hook_event_name: "SubagentStart" });
     const result = processHookEvent(input, config());
-    expect(result.ttsText).toBe("Starting unknown agent.");
+    expect(result.ttsText).toBe("Starting agent.");
+  });
+
+  it("uses description when subagent_type is missing", () => {
+    const input = JSON.stringify({ hook_event_name: "SubagentStart", description: "investigating error" });
+    const result = processHookEvent(input, config());
+    expect(result.ttsText).toBe("Starting agent: Investigating error.");
   });
 
   it("sets hookEventName to SubagentStart", () => {
@@ -62,14 +68,14 @@ describe("SubagentStop event handling", () => {
       subagent_type: "debugger",
     });
     const result = processHookEvent(input, config());
-    expect(result.ttsText).toBe("debugger agent done.");
+    expect(result.ttsText).toBe("Debugger agent done.");
     expect(getContext(result)).toContain("debugger agent done");
   });
 
   it("handles missing subagent_type", () => {
     const input = JSON.stringify({ hook_event_name: "SubagentStop" });
     const result = processHookEvent(input, config());
-    expect(result.ttsText).toBe("unknown agent done.");
+    expect(result.ttsText).toBe("Agent done.");
   });
 
   it("sets hookEventName to SubagentStop", () => {
