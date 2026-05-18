@@ -7,6 +7,7 @@ export interface TtsConfig {
   engine: "auto" | "say" | "spd-say";
   rate: number;
   maxLength: number;
+  normalizeToolNames: boolean;
 }
 
 export interface PermissionRule {

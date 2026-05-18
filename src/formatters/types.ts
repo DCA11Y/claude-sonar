@@ -13,6 +13,12 @@ export interface HookInputBase {
  */
 export interface PostToolUseInput extends HookInputBase {
   session_id?: string;
+  /**
+   * When true, the fallback formatter (and any formatter that chooses to honor
+   * this hint) should produce a normalized, human-readable tool name in ttsText.
+   * contextText is always unchanged regardless of this flag.
+   */
+  normalizeToolNames?: boolean;
 }
 
 /**

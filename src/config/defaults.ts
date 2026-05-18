@@ -7,6 +7,7 @@ export const DEFAULT_CONFIG: Readonly<SonarConfig> = {
     engine: "auto",
     rate: 200,
     maxLength: 500,
+    normalizeToolNames: false,
   },
   permissions: {
     rules: [],

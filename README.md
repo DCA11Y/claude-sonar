@@ -154,10 +154,12 @@ Text-to-speech configuration.
 | `tts.engine` | `"auto" \| "say" \| "spd-say"` | `"auto"` | TTS engine (`say` = macOS, `spd-say` = Linux) |
 | `tts.rate` | `number` | `200` | Speech rate in words per minute |
 | `tts.maxLength` | `number` | `500` | Max characters sent to TTS (truncated beyond this) |
+| `tts.normalizeToolNames` | `boolean` | `false` | Convert raw tool names to readable words (`mcp__uuid__getJiraIssue` → "MCP Get Jira Issue", `TaskCreate` → "Task Create") |
 
 ```bash
 claude-sonar config set tts.enabled true
 claude-sonar config set tts.rate 250
+claude-sonar config set tts.normalizeToolNames true
 ```
 
 #### permissions

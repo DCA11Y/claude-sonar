@@ -21,6 +21,7 @@ import type { SignificanceLevel } from "./significance.js";
 import { applySignificance } from "./apply-significance.js";
 import { appendToDigest, flushDigest, summarizeDigest, saveLastDigest } from "./digest.js";
 import { recordToolStart, getToolElapsed, formatElapsed } from "./progress.js";
+import { normalizeTtsToolName } from "./tool-name.js";
 
 export interface FormatResult {
   hookOutput: HookJsonOutput;
@@ -102,6 +103,7 @@ function handlePostToolUse(event: PostToolUseEvent, config: SonarConfig): Format
     tool_input: event.tool_input,
     tool_response: event.tool_response,
     session_id: event.session_id,
+    normalizeToolNames: config.tts?.normalizeToolNames === true,
   };
 
   // Per-tool silencing: return empty output if tool is silenced
@@ -346,10 +348,11 @@ function handleSubagentStop(event: SubagentStopEvent, config: SonarConfig): Form
 function handlePostToolUseFailure(event: PostToolUseFailureEvent, config: SonarConfig): FormatResult {
   const toolName = event.tool_name || "Unknown";
   const errorMsg = event.error ? `: ${event.error.slice(0, 200)}` : "";
+  const ttsName = config.tts?.normalizeToolNames === true ? normalizeTtsToolName(toolName) : toolName;
 
   const formatted: FormattedOutput = {
     contextText: `Tool failure: ${toolName} failed${errorMsg}.`,
-    ttsText: `Important: ${toolName} failed.`,
+    ttsText: `Important: ${ttsName} failed.`,
   };
 
   const hookOutput = buildHookOutput({
@@ -447,6 +450,8 @@ function formatPermissionRequestEvent(
 ): PermissionRequestResult {
   const toolDetails = describePermissionTool(event);
   const decision = evaluatePermissionRules(event, config);
+  const ttsName =
+    config.tts?.normalizeToolNames === true ? normalizeTtsToolName(event.tool_name) : event.tool_name;
 
   if (decision) {
     const actionText = decision.behavior === "allow" ? "Auto-approved" : "Auto-denied";
@@ -454,7 +459,7 @@ function formatPermissionRequestEvent(
     return {
       formatted: {
         contextText: `Permission for ${event.tool_name}: ${toolDetails}. ${actionText}${msgPart}.`,
-        ttsText: `${actionText} ${event.tool_name}${msgPart}.`,
+        ttsText: `${actionText} ${ttsName}${msgPart}.`,
       },
       decision,
     };
@@ -463,7 +468,7 @@ function formatPermissionRequestEvent(
   return {
     formatted: {
       contextText: `Permission requested for ${event.tool_name}: ${toolDetails}. Y to allow, N to deny.`,
-      ttsText: `Permission requested for ${event.tool_name}. Y to allow, N to deny.`,
+      ttsText: `Permission requested for ${ttsName}. Y to allow, N to deny.`,
     },
   };
 }
