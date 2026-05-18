@@ -4,6 +4,7 @@ import { processHookEvent, parseHookEvent } from "../../core/pipeline.js";
 import { speak } from "../../tts/index.js";
 import { playEarcon } from "../../earcon/index.js";
 import { appendToHistory } from "../../core/history.js";
+import { enqueueAnnouncement, tryDrainQueue } from "../../core/announcement-queue.js";
 
 /**
  * Format command handler. Called on every hook invocation (PostToolUse,
@@ -19,14 +20,20 @@ export async function formatCommand(): Promise<void> {
     // stdout first, always — never blocked by audio
     process.stdout.write(JSON.stringify(result.hookOutput));
 
-    // Earcon (fire-and-forget)
-    if (result.earcon && config.earcon.enabled) {
-      playEarcon(result.earcon, config.earcon);
-    }
+    // Earcon + TTS: queue if enabled, otherwise fire-and-forget
+    const hasEarcon = !!(result.earcon && config.earcon.enabled);
+    const hasTts = !!(result.ttsText && config.tts.enabled);
 
-    // TTS (fire-and-forget)
-    if (result.ttsText && config.tts.enabled) {
-      speak(result.ttsText, config.tts);
+    if (config.queue.enabled && (hasEarcon || hasTts)) {
+      enqueueAnnouncement({
+        earcon: hasEarcon ? result.earcon! : null,
+        ttsText: hasTts ? result.ttsText! : null,
+        timestamp: Date.now(),
+      });
+      tryDrainQueue(config);
+    } else {
+      if (hasEarcon) playEarcon(result.earcon!, config.earcon);
+      if (hasTts) speak(result.ttsText!, config.tts);
     }
 
     // History recording (non-fatal)

@@ -245,6 +245,20 @@ claude-sonar config set progress.enabled true
 claude-sonar config set progress.thresholdMs 5000
 ```
 
+#### queue
+
+Serializes TTS announcements and earcons to prevent them overlapping when multiple tool events fire in rapid succession. Each announcement plays fully before the next begins.
+
+| Key | Type | Default | Description |
+|-----|------|---------|-------------|
+| `queue.enabled` | `boolean` | `false` | Serialize announcements to prevent overlap |
+| `queue.gapMs` | `number` | `500` | Pause in milliseconds between announcements |
+
+```bash
+claude-sonar config set queue.enabled true
+claude-sonar config set queue.gapMs 500
+```
+
 #### history
 
 Logs hook events to a per-session JSONL file for later review.

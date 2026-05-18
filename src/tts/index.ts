@@ -1,6 +1,6 @@
 import type { TtsConfig } from "../config/types.js";
-import { speakMacos } from "./macos.js";
-import { speakLinux } from "./linux.js";
+import { speakMacos, speakMacosSync } from "./macos.js";
+import { speakLinux, speakLinuxSync } from "./linux.js";
 
 /**
  * Sanitize text for safe TTS output.
@@ -76,6 +76,29 @@ export function speak(text: string, config: TtsConfig): void {
       speakMacos(clean, config.rate);
     } else {
       speakLinux(clean, config.rate);
+    }
+  } catch {
+    // TTS failure is never fatal
+  }
+}
+
+/**
+ * Speak text via platform TTS, blocking until done.
+ * Used by the announcement queue to serialize audio output.
+ */
+export function speakSync(text: string, config: TtsConfig): void {
+  if (!config.enabled || !text) return;
+
+  const clean = sanitize(text, config.maxLength);
+  if (!clean) return;
+
+  const engine = config.engine === "auto" ? detectPlatformEngine() : config.engine;
+
+  try {
+    if (engine === "say") {
+      speakMacosSync(clean, config.rate);
+    } else {
+      speakLinuxSync(clean, config.rate);
     }
   } catch {
     // TTS failure is never fatal

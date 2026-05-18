@@ -57,6 +57,11 @@ export interface SummarizeConfig {
   maxTtsNames: number; // max names spoken in TTS (default 3)
 }
 
+export interface QueueConfig {
+  enabled: boolean;
+  gapMs: number; // milliseconds between announcements
+}
+
 export interface SonarConfig {
   verbosity: Verbosity;
   tts: TtsConfig;
@@ -68,4 +73,5 @@ export interface SonarConfig {
   progress: ProgressConfig;
   history: HistoryConfig;
   summarize: SummarizeConfig;
+  queue: QueueConfig;
 }

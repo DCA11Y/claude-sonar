@@ -1,4 +1,4 @@
-import { spawn, execFileSync } from "node:child_process";
+import { spawn, spawnSync, execFileSync } from "node:child_process";
 
 /**
  * Speak text using Linux speech-dispatcher (`spd-say`) or `espeak` fallback.
@@ -19,6 +19,19 @@ export function speakLinux(text: string, rate: number): void {
       stdio: "ignore",
     });
     child.unref();
+  }
+}
+
+/**
+ * Speak text using Linux speech-dispatcher (`spd-say`) or `espeak` fallback,
+ * blocking until done.
+ */
+export function speakLinuxSync(text: string, rate: number): void {
+  const engine = detectLinuxEngine();
+  if (engine === "spd-say") {
+    spawnSync("spd-say", ["-r", String(rate), "--", text], { stdio: "ignore" });
+  } else {
+    spawnSync("espeak", ["-s", String(rate), "--", text], { stdio: "ignore" });
   }
 }
 

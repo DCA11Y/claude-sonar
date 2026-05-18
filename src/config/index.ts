@@ -4,7 +4,7 @@ import type { SonarConfig } from "./types.js";
 import { DEFAULT_CONFIG } from "./defaults.js";
 
 export { DEFAULT_CONFIG } from "./defaults.js";
-export type { SonarConfig, Verbosity, TtsConfig, PermissionRule, PermissionsConfig, SilenceConfig, SignificanceConfig, DigestConfig, EarconConfig, ProgressConfig, HistoryConfig, SummarizeConfig } from "./types.js";
+export type { SonarConfig, Verbosity, TtsConfig, PermissionRule, PermissionsConfig, SilenceConfig, SignificanceConfig, DigestConfig, EarconConfig, ProgressConfig, HistoryConfig, SummarizeConfig, QueueConfig } from "./types.js";
 
 const DANGEROUS_KEYS = new Set(["__proto__", "constructor", "prototype"]);
 
@@ -137,6 +137,11 @@ function mergeConfig(user: Record<string, unknown>): SonarConfig {
       base.summarize.maxDeclarations = summarize["maxDeclarations"];
     if (typeof summarize["maxTtsNames"] === "number" && summarize["maxTtsNames"] > 0)
       base.summarize.maxTtsNames = summarize["maxTtsNames"];
+  }
+  if (typeof user["queue"] === "object" && user["queue"] !== null && !Array.isArray(user["queue"])) {
+    const queue = user["queue"] as Record<string, unknown>;
+    if (typeof queue["enabled"] === "boolean") base.queue.enabled = queue["enabled"];
+    if (typeof queue["gapMs"] === "number" && queue["gapMs"] >= 0) base.queue.gapMs = queue["gapMs"];
   }
   return base;
 }

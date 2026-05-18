@@ -42,4 +42,8 @@ export const DEFAULT_CONFIG: Readonly<SonarConfig> = {
     maxDeclarations: 20,
     maxTtsNames: 3,
   },
+  queue: {
+    enabled: false,
+    gapMs: 500,
+  },
 };

@@ -139,4 +139,71 @@ describe("config", () => {
       expect(config).toEqual(DEFAULT_CONFIG);
     });
   });
+
+  describe("queue config", () => {
+    it("reads queue.enabled from user config", () => {
+      fs.writeFileSync(
+        path.join(tmpDir, "config.json"),
+        JSON.stringify({ queue: { enabled: true } }),
+      );
+      const config = loadConfig();
+      expect(config.queue.enabled).toBe(true);
+      expect(config.queue.gapMs).toBe(500); // default preserved
+    });
+
+    it("reads queue.gapMs from user config", () => {
+      fs.writeFileSync(
+        path.join(tmpDir, "config.json"),
+        JSON.stringify({ queue: { gapMs: 1000 } }),
+      );
+      const config = loadConfig();
+      expect(config.queue.gapMs).toBe(1000);
+      expect(config.queue.enabled).toBe(false);
+    });
+
+    it("ignores non-boolean queue.enabled", () => {
+      fs.writeFileSync(
+        path.join(tmpDir, "config.json"),
+        JSON.stringify({ queue: { enabled: "yes" } }),
+      );
+      const config = loadConfig();
+      expect(config.queue.enabled).toBe(false);
+    });
+
+    it("ignores non-number queue.gapMs", () => {
+      fs.writeFileSync(
+        path.join(tmpDir, "config.json"),
+        JSON.stringify({ queue: { gapMs: "500" } }),
+      );
+      const config = loadConfig();
+      expect(config.queue.gapMs).toBe(500);
+    });
+
+    it("rejects negative gapMs", () => {
+      fs.writeFileSync(
+        path.join(tmpDir, "config.json"),
+        JSON.stringify({ queue: { gapMs: -100 } }),
+      );
+      const config = loadConfig();
+      expect(config.queue.gapMs).toBe(500);
+    });
+
+    it("accepts zero gapMs", () => {
+      fs.writeFileSync(
+        path.join(tmpDir, "config.json"),
+        JSON.stringify({ queue: { gapMs: 0 } }),
+      );
+      const config = loadConfig();
+      expect(config.queue.gapMs).toBe(0);
+    });
+
+    it("ignores array queue value", () => {
+      fs.writeFileSync(
+        path.join(tmpDir, "config.json"),
+        JSON.stringify({ queue: [1, 2, 3] }),
+      );
+      const config = loadConfig();
+      expect(config.queue).toEqual(DEFAULT_CONFIG.queue);
+    });
+  });
 });

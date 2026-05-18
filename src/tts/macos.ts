@@ -1,4 +1,4 @@
-import { spawn } from "node:child_process";
+import { spawn, spawnSync } from "node:child_process";
 
 /**
  * Speak text using macOS `say` command.
@@ -10,4 +10,11 @@ export function speakMacos(text: string, rate: number): void {
     stdio: "ignore",
   });
   child.unref();
+}
+
+/**
+ * Speak text using macOS `say` command, blocking until done.
+ */
+export function speakMacosSync(text: string, rate: number): void {
+  spawnSync("say", ["-r", String(rate), "--", text], { stdio: "ignore" });
 }

@@ -1,7 +1,7 @@
 import type { EarconConfig } from "../config/types.js";
 import { EARCON_IDS, MACOS_SOUNDS, LINUX_SOUNDS } from "./sounds.js";
-import { playMacos } from "./macos.js";
-import { playLinux } from "./linux.js";
+import { playMacos, playMacosSync } from "./macos.js";
+import { playLinux, playLinuxSync } from "./linux.js";
 
 export type { EarconId } from "./sounds.js";
 export { EARCON_IDS } from "./sounds.js";
@@ -31,6 +31,34 @@ export function playEarcon(earconId: string, config: EarconConfig): void {
       const soundName = override || LINUX_SOUNDS[earconId as keyof typeof LINUX_SOUNDS];
       if (!soundName) return;
       playLinux(soundName, config.volume);
+    }
+  } catch {
+    // Earcon failure is never fatal
+  }
+}
+
+/**
+ * Play an earcon sound, blocking until done. Used by the announcement queue.
+ */
+export function playEarconSync(earconId: string, config: EarconConfig): void {
+  if (!config.enabled) return;
+
+  const override = config.overrides[earconId];
+  if (override === false) return;
+
+  if (!override && !EARCON_IDS.has(earconId)) return;
+
+  const platform = detectPlatform(config.engine);
+
+  try {
+    if (platform === "macos") {
+      const soundPath = override || MACOS_SOUNDS[earconId as keyof typeof MACOS_SOUNDS];
+      if (!soundPath) return;
+      playMacosSync(soundPath, config.volume);
+    } else {
+      const soundName = override || LINUX_SOUNDS[earconId as keyof typeof LINUX_SOUNDS];
+      if (!soundName) return;
+      playLinuxSync(soundName, config.volume);
     }
   } catch {
     // Earcon failure is never fatal

@@ -1,4 +1,4 @@
-import { spawn } from "node:child_process";
+import { spawn, spawnSync } from "node:child_process";
 
 /**
  * Play a sound file on macOS using afplay.
@@ -12,4 +12,11 @@ export function playMacos(soundPath: string, volume: number): void {
     stdio: "ignore",
   });
   child.unref();
+}
+
+/**
+ * Play a sound file on macOS using afplay, blocking until done.
+ */
+export function playMacosSync(soundPath: string, volume: number): void {
+  spawnSync("afplay", ["-v", String(volume), soundPath], { stdio: "ignore" });
 }
