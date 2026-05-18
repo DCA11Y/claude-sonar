@@ -66,6 +66,8 @@ function mergeConfig(user: Record<string, unknown>): SonarConfig {
     if (typeof tts["rate"] === "number" && tts["rate"] > 0) base.tts.rate = tts["rate"];
     if (typeof tts["maxLength"] === "number" && tts["maxLength"] > 0)
       base.tts.maxLength = tts["maxLength"];
+    if (typeof tts["normalizeToolNames"] === "boolean")
+      base.tts.normalizeToolNames = tts["normalizeToolNames"];
   }
   if (typeof user["permissions"] === "object" && user["permissions"] !== null && !Array.isArray(user["permissions"])) {
     const perms = user["permissions"] as Record<string, unknown>;
