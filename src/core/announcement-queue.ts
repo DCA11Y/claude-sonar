@@ -13,7 +13,7 @@ import * as path from "node:path";
 import type { SonarConfig } from "../config/types.js";
 import { getStateDir } from "../config/index.js";
 import { speakSync } from "../tts/index.js";
-import { playEarconSync } from "../earcon/index.js";
+import { playEarcon } from "../earcon/index.js";
 
 export interface QueueEntry {
   earcon: string | null;
@@ -147,7 +147,7 @@ export function tryDrainQueue(config: SonarConfig, stateDir?: string): void {
       const entry = entries[i]!;
       try {
         if (entry.earcon && config.earcon.enabled) {
-          playEarconSync(entry.earcon, config.earcon);
+          playEarcon(entry.earcon, config.earcon);
         }
         if (entry.ttsText && config.tts.enabled) {
           speakSync(entry.ttsText, config.tts);

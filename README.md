@@ -247,7 +247,7 @@ claude-sonar config set progress.thresholdMs 5000
 
 #### queue
 
-Serializes TTS announcements and earcons to prevent them overlapping when multiple tool events fire in rapid succession. Each announcement plays fully before the next begins.
+Serializes announcements to prevent them overlapping when multiple tool events fire in rapid succession. Within a single announcement the earcon fires alongside its paired TTS so they overlap naturally, but separate announcements never overlap — the next one waits for the current TTS to finish, plus a configurable gap.
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
