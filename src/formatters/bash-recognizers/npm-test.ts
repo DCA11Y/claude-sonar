@@ -13,15 +13,18 @@ export const npmTestRecognizer: BashRecognizer = {
   },
 
   summarize(command: string, exitCode: string | number, stdout: string) {
+    // Strip ANSI escape codes so color-coded vitest/jest output can be parsed reliably
+    const clean = stdout.replace(/\x1B\[[0-9;]*[mGKHF]/g, "");
+
     // Vitest output: "Tests  X passed (Y)" or "X passed | Y failed | Z skipped"
     // Match "Tests  N passed" specifically (not "Test Files  N passed")
-    const vitestTestsLine = stdout.match(/^\s*Tests\s+.*$/m);
+    const vitestTestsLine = clean.match(/^\s*Tests\s+.*$/m);
     const vitestMatch = vitestTestsLine ? vitestTestsLine[0].match(/(\d+)\s+passed/) : null;
     const vitestFailed = vitestTestsLine ? vitestTestsLine[0].match(/(\d+)\s+failed/) : null;
     const vitestSkipped = vitestTestsLine ? vitestTestsLine[0].match(/(\d+)\s+skipped/) : null;
 
     // Jest output: "Tests: X passed, Y failed, Z total"
-    const jestMatch = stdout.match(/Tests:\s*(.*)/);
+    const jestMatch = clean.match(/Tests:\s*(.*)/);
 
     let passed = 0;
     let failed = 0;
@@ -40,14 +43,14 @@ export const npmTestRecognizer: BashRecognizer = {
 
     const total = passed + failed + skipped;
     if (total === 0) {
-      // Couldn't parse test results
+      // Couldn't parse test results — fall back to exit code
       const lineCount = stdout.split("\n").filter(Boolean).length;
+      const succeeded = exitCode === 0 || exitCode === "0";
+      const unknownExit = exitCode === "?" || exitCode === undefined || exitCode === null;
       return {
         contextText: `Ran: ${command}\nExit code: ${exitCode}\nTest output: ${lineCount} lines`,
         ttsText:
-          exitCode === 0 || exitCode === "0"
-            ? "Tests passed."
-            : `Tests failed, exit code ${exitCode}.`,
+          succeeded || unknownExit ? "Tests passed." : `Tests failed, exit code ${exitCode}.`,
       };
     }
 

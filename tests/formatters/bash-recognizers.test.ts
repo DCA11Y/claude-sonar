@@ -116,9 +116,22 @@ describe("npmTestRecognizer", () => {
     expect(result.ttsText).toContain("3 failed");
   });
 
-  it("handles unparseable test output", () => {
+  it("handles unparseable test output with known-zero exit code", () => {
     const result = npmTestRecognizer.summarize("npm test", 0, "some unknown output\n");
     expect(result.ttsText).toContain("Tests passed");
+  });
+
+  it("handles unparseable test output with unknown exit code", () => {
+    const result = npmTestRecognizer.summarize("npm test", "?", "some unknown output\n");
+    expect(result.ttsText).toContain("Tests passed");
+  });
+
+  it("parses ANSI-encoded vitest output", () => {
+    const ansiOutput =
+      "\x1B[2m Test Files \x1B[22m \x1B[1m\x1B[32m44 passed\x1B[39m\x1B[22m\x1B[90m (44)\x1B[39m\n" +
+      "\x1B[2m      Tests \x1B[22m \x1B[1m\x1B[32m582 passed\x1B[39m\x1B[22m\x1B[90m (582)\x1B[39m\n";
+    const result = npmTestRecognizer.summarize("npm test", "?", ansiOutput);
+    expect(result.ttsText).toContain("All 582 tests passed");
   });
 
   it("matches yarn test", () => {
