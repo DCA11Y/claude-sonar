@@ -288,6 +288,31 @@ describe("PermissionRequest handling", () => {
     expect(getContext(result)).toContain("Y to allow");
   });
 
+  it("uses desktop hint when entrypoint is desktop", () => {
+    const cfg = config();
+    cfg.entrypoint = "desktop";
+    const input = JSON.stringify({
+      hook_event_name: "PermissionRequest",
+      tool_name: "Bash",
+      tool_input: { command: "npm test" },
+    });
+    const result = processHookEvent(input, cfg);
+    expect(result.ttsText).toContain("Command Return, to allow. Escape, to deny.");
+    expect(getContext(result)).toContain("Command Return, to allow. Escape, to deny.");
+  });
+
+  it("uses CLI hint when entrypoint is cli", () => {
+    const cfg = config();
+    cfg.entrypoint = "cli";
+    const input = JSON.stringify({
+      hook_event_name: "PermissionRequest",
+      tool_name: "Bash",
+      tool_input: { command: "npm test" },
+    });
+    const result = processHookEvent(input, cfg);
+    expect(result.ttsText).toContain("Y to allow, N to deny.");
+  });
+
   it("formats Bash permission request", () => {
     const input = JSON.stringify({
       hook_event_name: "PermissionRequest",

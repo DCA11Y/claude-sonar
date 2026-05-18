@@ -74,4 +74,6 @@ export interface SonarConfig {
   history: HistoryConfig;
   summarize: SummarizeConfig;
   queue: QueueConfig;
+  /** Detected at runtime from CLAUDE_CODE_ENTRYPOINT — not user-configurable. */
+  entrypoint?: "cli" | "desktop";
 }

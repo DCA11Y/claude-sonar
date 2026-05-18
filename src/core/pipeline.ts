@@ -465,10 +465,15 @@ function formatPermissionRequestEvent(
     };
   }
 
+  const hint =
+    config.entrypoint === "desktop"
+      ? "Command Return, to allow. Escape, to deny."
+      : "Y to allow, N to deny.";
+
   return {
     formatted: {
-      contextText: `Permission requested for ${event.tool_name}: ${toolDetails}. Y to allow, N to deny.`,
-      ttsText: `Permission requested for ${ttsName}. Y to allow, N to deny.`,
+      contextText: `Permission requested for ${event.tool_name}: ${toolDetails}. ${hint}`,
+      ttsText: `Permission requested for ${ttsName}. ${hint}`,
     },
   };
 }

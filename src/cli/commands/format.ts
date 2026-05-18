@@ -15,6 +15,7 @@ export async function formatCommand(): Promise<void> {
   try {
     const raw = await readStdin(process.stdin, { timeoutMs: 5000, maxBytes: 5_000_000 });
     const config = loadConfig();
+    config.entrypoint = process.env.CLAUDE_CODE_ENTRYPOINT === "claude-desktop" ? "desktop" : "cli";
     const result = processHookEvent(raw, config);
 
     // stdout first, always — never blocked by audio
