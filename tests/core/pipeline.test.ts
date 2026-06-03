@@ -136,9 +136,10 @@ describe("processHookEvent", () => {
       notification_type: "idle_prompt",
     });
     const result = processHookEvent(input, config());
-    expect(result.hookOutput.hookSpecificOutput!.hookEventName).toBe("Notification");
-    expect(getContext(result)).toContain("Session idle");
-    expect(getContext(result)).toContain("Session is idle");
+    // Notification does not accept hookSpecificOutput; the message rides on TTS.
+    expect(result.hookOutput.hookSpecificOutput).toBeUndefined();
+    expect(result.ttsText).toContain("Session idle");
+    expect(result.ttsText).toContain("Session is idle");
   });
 
   it("routes PermissionRequest events", () => {
@@ -148,9 +149,9 @@ describe("processHookEvent", () => {
       tool_input: { command: "rm -rf /tmp/test" },
     });
     const result = processHookEvent(input, config());
-    expect(result.hookOutput.hookSpecificOutput!.hookEventName).toBe("PermissionRequest");
-    expect(getContext(result)).toContain("Permission");
-    expect(getContext(result)).toContain("rm -rf /tmp/test");
+    // No matching rule: no decision, and PermissionRequest carries no context.
+    expect(result.hookOutput.hookSpecificOutput).toBeUndefined();
+    expect(result.ttsText).toContain("Permission requested");
   });
 
   it("handles unknown event types gracefully", () => {
@@ -159,7 +160,7 @@ describe("processHookEvent", () => {
       some_data: "test",
     });
     const result = processHookEvent(input, config());
-    expect(result.hookOutput.hookSpecificOutput).toBeDefined();
+    expect(result.hookOutput).toBeDefined();
   });
 
   it("defaults to PostToolUse when hook_event_name is missing", () => {
@@ -249,8 +250,6 @@ describe("Notification handling", () => {
       title: "Tool Access",
     });
     const result = processHookEvent(input, config());
-    expect(getContext(result)).toContain("Permission required");
-    expect(getContext(result)).toContain("Tool Access");
     expect(result.ttsText).toContain("Permission required");
   });
 
@@ -260,8 +259,8 @@ describe("Notification handling", () => {
       message: "Something happened",
     });
     const result = processHookEvent(input, config());
-    expect(getContext(result)).toContain("Notification");
-    expect(getContext(result)).toContain("Something happened");
+    expect(result.ttsText).toContain("Notification");
+    expect(result.ttsText).toContain("Something happened");
   });
 
   it("formats idle notification", () => {
@@ -271,7 +270,7 @@ describe("Notification handling", () => {
       notification_type: "idle_prompt",
     });
     const result = processHookEvent(input, config());
-    expect(getContext(result)).toContain("Session idle");
+    expect(result.ttsText).toContain("Session idle");
   });
 });
 
@@ -283,9 +282,8 @@ describe("PermissionRequest handling", () => {
       tool_input: { file_path: "/src/app.ts", old_string: "a\nb", new_string: "c\nd\ne" },
     });
     const result = processHookEvent(input, config());
-    expect(getContext(result)).toContain("Permission");
-    expect(getContext(result)).toContain("app.ts");
-    expect(getContext(result)).toContain("Y to allow");
+    expect(result.ttsText).toContain("Permission requested");
+    expect(result.ttsText).toContain("Y to allow");
   });
 
   it("uses desktop hint when entrypoint is desktop", () => {
@@ -298,7 +296,6 @@ describe("PermissionRequest handling", () => {
     });
     const result = processHookEvent(input, cfg);
     expect(result.ttsText).toContain("Command Return, to allow. Escape, to deny.");
-    expect(getContext(result)).toContain("Command Return, to allow. Escape, to deny.");
   });
 
   it("uses CLI hint when entrypoint is cli", () => {
@@ -313,14 +310,14 @@ describe("PermissionRequest handling", () => {
     expect(result.ttsText).toContain("Y to allow, N to deny.");
   });
 
-  it("formats Bash permission request", () => {
+  it("announces a Bash permission request", () => {
     const input = JSON.stringify({
       hook_event_name: "PermissionRequest",
       tool_name: "Bash",
       tool_input: { command: "npm install lodash" },
     });
     const result = processHookEvent(input, config());
-    expect(getContext(result)).toContain("npm install lodash");
+    expect(result.ttsText).toContain("Permission requested");
   });
 
   it("auto-approves via permission rules", () => {
@@ -334,7 +331,7 @@ describe("PermissionRequest handling", () => {
     const result = processHookEvent(input, cfg);
     expect(result.hookOutput.hookSpecificOutput!.decision).toBeDefined();
     expect(result.hookOutput.hookSpecificOutput!.decision!.behavior).toBe("allow");
-    expect(getContext(result)).toContain("Auto-approved");
+    expect(result.ttsText).toContain("Auto-approved");
   });
 
   it("auto-denies via pattern match", () => {
@@ -347,7 +344,7 @@ describe("PermissionRequest handling", () => {
     });
     const result = processHookEvent(input, cfg);
     expect(result.hookOutput.hookSpecificOutput!.decision!.behavior).toBe("deny");
-    expect(getContext(result)).toContain("Auto-denied");
+    expect(result.ttsText).toContain("Auto-denied");
   });
 
   it("falls through when no rule matches", () => {
@@ -359,8 +356,8 @@ describe("PermissionRequest handling", () => {
       tool_input: { command: "ls" },
     });
     const result = processHookEvent(input, cfg);
-    expect(result.hookOutput.hookSpecificOutput!.decision).toBeUndefined();
-    expect(getContext(result)).toContain("Y to allow");
+    expect(result.hookOutput.hookSpecificOutput?.decision).toBeUndefined();
+    expect(result.ttsText).toContain("Y to allow");
   });
 
   it("matches pattern against file_path for Edit", () => {
@@ -384,7 +381,7 @@ describe("PermissionRequest handling", () => {
       tool_input: { command: "echo hello" },
     });
     const result = processHookEvent(input, cfg);
-    expect(result.hookOutput.hookSpecificOutput!.decision).toBeUndefined();
+    expect(result.hookOutput.hookSpecificOutput?.decision).toBeUndefined();
   });
 });
 
@@ -438,7 +435,7 @@ describe("Per-tool silencing", () => {
       tool_input: { command: "dangerous" },
     });
     const result = processHookEvent(input, cfg);
-    expect(getContext(result)).toContain("Permission");
+    expect(result.ttsText).toContain("Permission");
   });
 
   it("never silences Notification", () => {
@@ -449,6 +446,6 @@ describe("Per-tool silencing", () => {
       message: "Important notice",
     });
     const result = processHookEvent(input, cfg);
-    expect(getContext(result)).toContain("Important notice");
+    expect(result.ttsText).toContain("Important notice");
   });
 });

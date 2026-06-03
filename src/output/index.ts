@@ -57,22 +57,38 @@ export function buildHookOutput(
 
   const additionalContext = buildAdditionalContext(formatted, verb, sigLevel);
 
-  const result: HookJsonOutput = {
-    hookSpecificOutput: {
-      hookEventName: evName,
-    },
-  };
+  // Claude Code only accepts the `hookSpecificOutput` envelope on a subset of
+  // events. Emitting it for any other event (Stop, SubagentStop, Notification,
+  // TaskCompleted, etc.) is rejected with "(root): Invalid input", so for those
+  // we return a bare `{}` and rely on sonar's TTS/earcon side effects instead.
+  const result: HookJsonOutput = {};
 
-  if (additionalContext) {
-    result.hookSpecificOutput!.additionalContext = additionalContext;
+  if (ADDITIONAL_CONTEXT_EVENTS.has(evName)) {
+    result.hookSpecificOutput = { hookEventName: evName };
+    if (additionalContext) {
+      result.hookSpecificOutput.additionalContext = additionalContext;
+    }
   }
 
+  // Permission decisions ride on the permission-flow events only.
   if (dec) {
-    result.hookSpecificOutput!.decision = dec;
+    result.hookSpecificOutput = result.hookSpecificOutput ?? { hookEventName: evName };
+    result.hookSpecificOutput.decision = dec;
   }
 
   return result;
 }
+
+/**
+ * Events for which Claude Code accepts `hookSpecificOutput.additionalContext`.
+ * All other events must emit a bare output object, or Claude Code rejects the
+ * hook output as invalid.
+ */
+const ADDITIONAL_CONTEXT_EVENTS = new Set<string>([
+  "PostToolUse",
+  "UserPromptSubmit",
+  "SessionStart",
+]);
 
 function buildAdditionalContext(
   formatted: FormattedOutput,

@@ -58,15 +58,53 @@ describe("buildHookOutput", () => {
     const result = buildHookOutput({
       formatted: sample,
       verbosity: "normal",
-      eventName: "Notification",
+      eventName: "PostToolUse",
     });
-    expect(result.hookSpecificOutput!.hookEventName).toBe("Notification");
+    expect(result.hookSpecificOutput!.hookEventName).toBe("PostToolUse");
     expect(result.hookSpecificOutput!.additionalContext).toContain(sample.ttsText);
   });
 
   it("handles empty formatted output", () => {
     const empty: FormattedOutput = { contextText: "", ttsText: "" };
     const result = buildHookOutput(empty, "normal", "PostToolUse");
+    expect(result.hookSpecificOutput!.additionalContext).toBeUndefined();
+  });
+});
+
+describe("hookSpecificOutput event gating", () => {
+  // Claude Code only accepts hookSpecificOutput on these events.
+  it.each(["PostToolUse", "UserPromptSubmit", "SessionStart"])(
+    "emits hookSpecificOutput for %s",
+    (eventName) => {
+      const result = buildHookOutput({ formatted: sample, verbosity: "normal", eventName });
+      expect(result.hookSpecificOutput).toBeDefined();
+      expect(result.hookSpecificOutput!.hookEventName).toBe(eventName);
+      expect(result.hookSpecificOutput!.additionalContext).toContain(sample.ttsText);
+    },
+  );
+
+  // Every other event must yield a bare {} or Claude Code rejects it.
+  it.each(["Stop", "SubagentStop", "SubagentStart", "Notification", "TaskCompleted", "PostToolUseFailure"])(
+    "emits a bare object for %s",
+    (eventName) => {
+      const result = buildHookOutput({ formatted: sample, verbosity: "normal", eventName });
+      expect(result.hookSpecificOutput).toBeUndefined();
+      expect(result).toEqual({});
+    },
+  );
+
+  it("still emits a decision on non-context events when one is provided", () => {
+    const result = buildHookOutput({
+      formatted: sample,
+      verbosity: "normal",
+      eventName: "PermissionRequest",
+      decision: { behavior: "allow", message: "auto-approved" },
+    });
+    expect(result.hookSpecificOutput!.decision).toEqual({
+      behavior: "allow",
+      message: "auto-approved",
+    });
+    // additionalContext is NOT injected for PermissionRequest.
     expect(result.hookSpecificOutput!.additionalContext).toBeUndefined();
   });
 });

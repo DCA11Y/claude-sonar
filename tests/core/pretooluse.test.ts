@@ -20,7 +20,8 @@ describe("PreToolUse handling", () => {
     const result = processHookEvent(input, config());
     expect(result.ttsText).toBeNull();
     expect(result.earcon).toBeNull();
-    expect(result.hookOutput.hookSpecificOutput?.hookEventName).toBe("PreToolUse");
+    // PreToolUse with no decision yields a bare output object.
+    expect(result.hookOutput).toEqual({});
   });
 
   it("parses PreToolUse event correctly", () => {

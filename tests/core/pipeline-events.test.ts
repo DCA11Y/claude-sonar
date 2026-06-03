@@ -7,10 +7,6 @@ function config(overrides: Partial<SonarConfig> = {}): SonarConfig {
   return { ...structuredClone(DEFAULT_CONFIG), ...overrides } as SonarConfig;
 }
 
-function getContext(result: { hookOutput: { hookSpecificOutput?: { additionalContext?: string } } }): string {
-  return result.hookOutput.hookSpecificOutput?.additionalContext || "";
-}
-
 describe("Stop event handling", () => {
   it("produces Done TTS", () => {
     const input = JSON.stringify({
@@ -19,13 +15,13 @@ describe("Stop event handling", () => {
     });
     const result = processHookEvent(input, config());
     expect(result.ttsText).toBe("Done.");
-    expect(getContext(result)).toContain("finished");
   });
 
-  it("sets hookEventName to Stop", () => {
+  it("emits no hookSpecificOutput (Stop does not accept it)", () => {
     const input = JSON.stringify({ hook_event_name: "Stop" });
     const result = processHookEvent(input, config());
-    expect(result.hookOutput.hookSpecificOutput!.hookEventName).toBe("Stop");
+    expect(result.hookOutput.hookSpecificOutput).toBeUndefined();
+    expect(result.hookOutput).toEqual({});
   });
 });
 
@@ -38,8 +34,6 @@ describe("SubagentStart event handling", () => {
     });
     const result = processHookEvent(input, config());
     expect(result.ttsText).toBe("Starting Debugger agent.");
-    expect(getContext(result)).toContain("debugger");
-    expect(getContext(result)).toContain("investigating error");
   });
 
   it("handles missing subagent_type with no description", () => {
@@ -54,10 +48,10 @@ describe("SubagentStart event handling", () => {
     expect(result.ttsText).toBe("Starting agent: Investigating error.");
   });
 
-  it("sets hookEventName to SubagentStart", () => {
+  it("emits no hookSpecificOutput for SubagentStart", () => {
     const input = JSON.stringify({ hook_event_name: "SubagentStart", subagent_type: "explore" });
     const result = processHookEvent(input, config());
-    expect(result.hookOutput.hookSpecificOutput!.hookEventName).toBe("SubagentStart");
+    expect(result.hookOutput.hookSpecificOutput).toBeUndefined();
   });
 });
 
@@ -69,7 +63,6 @@ describe("SubagentStop event handling", () => {
     });
     const result = processHookEvent(input, config());
     expect(result.ttsText).toBe("Debugger agent done.");
-    expect(getContext(result)).toContain("debugger agent done");
   });
 
   it("handles missing subagent_type", () => {
@@ -78,10 +71,10 @@ describe("SubagentStop event handling", () => {
     expect(result.ttsText).toBe("Agent done.");
   });
 
-  it("sets hookEventName to SubagentStop", () => {
+  it("emits no hookSpecificOutput for SubagentStop", () => {
     const input = JSON.stringify({ hook_event_name: "SubagentStop", subagent_type: "plan" });
     const result = processHookEvent(input, config());
-    expect(result.hookOutput.hookSpecificOutput!.hookEventName).toBe("SubagentStop");
+    expect(result.hookOutput.hookSpecificOutput).toBeUndefined();
   });
 });
 
@@ -95,8 +88,6 @@ describe("PostToolUseFailure event handling", () => {
     });
     const result = processHookEvent(input, config());
     expect(result.ttsText).toBe("Important: Edit failed.");
-    expect(getContext(result)).toContain("Edit failed");
-    expect(getContext(result)).toContain("old_string not found");
   });
 
   it("handles missing error message", () => {
@@ -109,19 +100,7 @@ describe("PostToolUseFailure event handling", () => {
     expect(result.ttsText).toBe("Important: Bash failed.");
   });
 
-  it("truncates long error messages in contextText", () => {
-    const input = JSON.stringify({
-      hook_event_name: "PostToolUseFailure",
-      tool_name: "Edit",
-      tool_input: {},
-      error: "A".repeat(500),
-    });
-    const result = processHookEvent(input, config());
-    // Error truncated to 200 chars
-    expect(getContext(result).length).toBeLessThan(300);
-  });
-
-  it("sets hookEventName to PostToolUseFailure", () => {
+  it("emits no hookSpecificOutput for PostToolUseFailure", () => {
     const input = JSON.stringify({
       hook_event_name: "PostToolUseFailure",
       tool_name: "Write",
@@ -129,7 +108,7 @@ describe("PostToolUseFailure event handling", () => {
       error: "permission denied",
     });
     const result = processHookEvent(input, config());
-    expect(result.hookOutput.hookSpecificOutput!.hookEventName).toBe("PostToolUseFailure");
+    expect(result.hookOutput.hookSpecificOutput).toBeUndefined();
   });
 });
 
@@ -142,7 +121,6 @@ describe("TaskCompleted event handling", () => {
     });
     const result = processHookEvent(input, config());
     expect(result.ttsText).toBe("Task done: Fix auth bug.");
-    expect(getContext(result)).toContain("Fix auth bug");
   });
 
   it("falls back to task ID when no subject", () => {
@@ -162,10 +140,10 @@ describe("TaskCompleted event handling", () => {
     expect(result.ttsText).toContain("Task done");
   });
 
-  it("sets hookEventName to TaskCompleted", () => {
+  it("emits no hookSpecificOutput for TaskCompleted", () => {
     const input = JSON.stringify({ hook_event_name: "TaskCompleted", task_subject: "test" });
     const result = processHookEvent(input, config());
-    expect(result.hookOutput.hookSpecificOutput!.hookEventName).toBe("TaskCompleted");
+    expect(result.hookOutput.hookSpecificOutput).toBeUndefined();
   });
 });
 
